@@ -56,7 +56,7 @@ class Feed extends Component {
     const graphqlQuery = {
       query: `
       {
-        getPosts {
+        getPosts(page: ${page}) {
           posts {
             _id
             title
@@ -210,6 +210,7 @@ class Feed extends Component {
             const postIndex = prevState.posts.findIndex(p => p._id === prevState.editPost._id);
             updatedPosts[postIndex] = post
           } else {
+            updatedPosts.pop()
             updatedPosts.unshift(post)
           }
           return {
@@ -314,7 +315,7 @@ class Feed extends Component {
             <Paginator
               onPrevious={this.loadPosts.bind(this, 'previous')}
               onNext={this.loadPosts.bind(this, 'next')}
-              lastPage={Math.ceil(this.state.totalPosts / 2)}
+              lastPage={Math.ceil(this.state.totalPosts / 4)}
               currentPage={this.state.postPage}
             >
               {this.state.posts.map((post) => (
