@@ -163,8 +163,10 @@ class Feed extends Component {
     })
       .then((res) => res.json())
       .then((fileResData) => {
-        const imageUrl = fileResData.filePath.replace('\\', '/');
-        console.log('fileResData', imageUrl);
+        const imageUrl = fileResData.filePath && fileResData.filePath.replace(
+          '\\',
+          '/'
+        );
         let graphqlQuery = {
           query: `
       mutation {
@@ -189,6 +191,32 @@ class Feed extends Component {
       }
     `,
         };
+        if (this.state.editPost) {
+          graphqlQuery = {
+            query: `
+      mutation {
+        updatePost(
+          id: "${this.state.editPost._id}",
+          postInput : {
+            title: "${postData.title}",
+            imageUrl: "${imageUrl}",
+            content: "${postData.content}",
+          }
+        ){
+          _id
+          title
+          content
+          imageUrl
+          creator {
+            _id
+            name
+          }
+          createdAt
+        }
+      }
+    `,
+          };
+        }
         return fetch('http://localhost:8080/graphql', {
           method: 'POST',
           body: JSON.stringify(graphqlQuery),
@@ -211,13 +239,17 @@ class Feed extends Component {
         if (resData.errors) {
           throw new Error('User creation failed');
         }
+        let postMode = 'createPost';
+        if(this.state.editPost){
+          postMode = 'updatePost'
+        }
         const post = {
-          _id: resData.data.createPost._id,
-          title: resData.data.createPost.title,
-          content: resData.data.createPost.content,
-          creator: resData.data.createPost.creator.name,
-          createdAt: resData.data.createPost.createdAt,
-          imagePath: resData.data.createPost.imageUrl,
+          _id: resData.data[postMode]._id,
+          title: resData.data[postMode].title,
+          content: resData.data[postMode].content,
+          creator: resData.data[postMode].creator.name,
+          createdAt: resData.data[postMode].createdAt,
+          imagePath: resData.data[postMode].imageUrl,
         };
         this.setState((prevState) => {
           let updatedPosts = [...prevState.posts];
